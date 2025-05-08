@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Générateur de Techniques RP</title>
+  <style>
+    .technique {
+      padding: 15px 15px 5px 15px;
+      background-size: 100% auto;
+      font: 12px 'Roboto';
+      width: calc(100% - 50px);
+      max-width: 800px;
+      height: auto;
+      background-color: #fafafa;
+      text-align: justify;
+      border-style: double;
+      border-color: #d4d4d4;
+      box-shadow: 0px 0px 10px -5px #a4a4a4;
+      background-image: url(https://zupimages.net/up/23/40/7us7.png);
+      background-repeat: repeat-x;
+    }
+
+    .technique span {
+      display: inline-block;
+      background: #913e30;
+      color: #fff !important;
+      text-align: center;
+      letter-spacing: .5px;
+      padding: 5px 10px 3px 10px;
+      font: 11px 'Yanone Kaffeesatz', sans-serif;
+      line-height: .8;
+      margin: 0 .8px 0 0;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .export {
+      display: flex;
+      justify-content: end;
+      margin-top: 1rem;
+      text-align: right;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f9f4ef, #f3eadd);
+      margin: 0;
+      padding: 2rem;
+      color: #4b3b2a;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+    .card {
+      background: #fffaf3;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      margin-top: 0;
+      color: #7a5c3d;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0 1rem;
+      border-radius: 10px;
+      border: 1px solid #c1ab90;
+      font-size: 1rem;
+      background: #fffaf3;
+      color: #4b3b2a;
+    }
+    textarea {
+      resize: vertical;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .button-group button {
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      border: 1px solid #7a5c3d;
+      background: white;
+      color: #7a5c3d;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .button-group button:hover {
+      background: #7a5c3d;
+      color: white;
+    }
+    .button-selected {
+      background-color: #7a5c3d !important;
+      color: white !important;
+    }
+    .actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .actions button {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 12px;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      background-color: #7a5c3d;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .actions button:hover {
+      background-color: #5d432c;
+    }
+    .preview {
+      border-top: 2px dashed #c1ab90;
+      padding-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Création d'une technique</h2>
+      <h3>Titre de la technique</h3>
+<input id="title" placeholder="Titre de la technique" />
+
+      <h3>Rang</h3>
+      <select id="puissance">
+        <option value="">-- Sélectionner --</option>
+        <option value="D">D</option>
+        <option value="C">C</option>
+        <option value="B">B</option>
+        <option value="A">A</option>
+        <option value="S">S</option>
+      </select>
+
+      <h3>Couleur du titre</h3>
+      <label for="color">Sélectionnez ou entrez un code hexadécimal :</label>
+      <input type="color" id="color" value="#01796F" oninput="updateColorHex(this.value)" />
+      <input type="text" id="colorHex" value="#01796F" oninput="updateColorPicker(this.value)" />
+
+      <textarea id="description" rows="5" placeholder="Description de la technique"></textarea>
+
+      <h3>Compétences</h3>
+      <div id="categoryButtons" class="button-group"></div>
+
+      <h3>Tags</h3>
+      <div id="tagButtons" class="button-group"></div>
+
+      <div class="actions">
+        <button onclick="generateHtml()">Prévisualiser</button>
+        <button onclick="copyToClipboard()" title="Copie le code HTML de la technique et le bloc [code][/code] à coller dans la fiche technique">Copier le code</button>
+
+      </div>
+    </div>
+
+    <p style="font-style: italic; color: #7a5c3d; text-align: center; margin-bottom: 1rem;">Note : la prévisualisation ci-dessous n'est pas parfaitement fidèle au rendu final sur le forum (le CSS complet n'est pas appliqué).</p>
+    <div id="preview" class="card preview"></div>
+  </div>
+
+  <script>
+    const categories = ["Ninjutsu Affinitaire", "Ninjutsu Spécial", "Genjutsu", "Fuinjutsu", "Détection", "Dissimulation", "Kuchiyose Animal", "Kuchiyose Techniques", "Taijutsu", "Kenjutsu", "Shurikenjutsu", "Keihoujutsu", "Kyujutsu", "Juukakijutsu"];
+    const tags = ["Attaque", "Défense", "Utilitaire", "Monodirectionnelle", "Multidirectionnelle", "Attaque de zone", "Monocible", "Multicible", "Entrave partielle", "Immobilisation", "Destabilisation", "Boost", "Rapide", "Dissimulée", "Modifie le terrain", "Téléguidée", "Perceptible", "Imperceptible", "Stockage", "Marquage", "Automatique"];
+    let selectedCategories = [], selectedTags = [];
+
+    const categoryContainer = document.getElementById("categoryButtons");
+    categories.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.textContent = cat;
+      btn.onclick = () => {
+        if (selectedCategories.includes(cat)) {
+          selectedCategories = selectedCategories.filter(c => c !== cat);
+          btn.classList.remove("button-selected");
+        } else {
+          selectedCategories.push(cat);
+          btn.classList.add("button-selected");
+        }
+      };
+      categoryContainer.appendChild(btn);
+    });
+
+    const tagContainer = document.getElementById("tagButtons");
+    tags.forEach(tag => {
+      const btn = document.createElement("button");
+      btn.textContent = tag;
+      btn.onclick = () => {
+        if (selectedTags.includes(tag)) {
+          selectedTags = selectedTags.filter(t => t !== tag);
+          btn.classList.remove("button-selected");
+        } else {
+          selectedTags.push(tag);
+          btn.classList.add("button-selected");
+        }
+      };
+      tagContainer.appendChild(btn);
+    });
+
+    function adjustPowerRankDisplay(rank) {
+      const tagsToWeaken = ["Attaque de zone", "Multicible", "Téléguidée", "Rapide"];
+      const hasWeakenTag = selectedTags.some(tag => tagsToWeaken.includes(tag));
+      return hasWeakenTag ? `${rank}-` : rank;
+    }
+
+    function updateColorHex(val) {
+      document.getElementById("colorHex").value = val;
+    }
+
+    function updateColorPicker(val) {
+      if (/^#([0-9a-fA-F]{6})$/.test(val)) {
+        document.getElementById("color").value = val;
+      }
+    }
+
+    function generateHtml() {
+      const title = document.getElementById("title").value;
+      const color = document.getElementById("color").value;
+      const description = document.getElementById("description").value;
+      const rawPower = document.getElementById("puissance").value;
+      const displayPower = rawPower ? adjustPowerRankDisplay(rawPower) : "";
+      const fullTitle = rawPower ? `${title} — ${rawPower}` : title;
+      const puissanceSpan = rawPower ? `<span style=\"background:#908372;\">PUISSANCE DE RANG ${displayPower}</span>` : "";
+      const html = `<div class=\"technique\"><h1><font color=\"${color}\">${fullTitle}</font></h1><h2>${selectedCategories.join(" - ")}</h2>${description.replaceAll("\n", "<br/>")}<br/><br/><center>${selectedTags.map(tag => `<span>${tag.toUpperCase()}</span>`).join("")}${puissanceSpan}</center><div class=\"export\"><span class=\"exportButton\">EXPORTER</span></div></div>`;
+      document.getElementById("preview").innerHTML = html;
+    }
+
+    function copyToClipboard() {
+      const preview = document.getElementById("preview").innerHTML;
+      const code = `${preview}\n\n[code]${preview}[/code]`;
+      navigator.clipboard.writeText(code);
+      alert("Code copié dans le presse-papier !");
+    }
+  </script>
+</body>
+</html>
